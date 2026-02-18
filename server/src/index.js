@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 
 // Import Database Connection
 const db = require('./config/db');

@@ -1,5 +1,5 @@
 const { Pool } = require('pg');
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 
 // Create a connection pool (better performance than single client)
 const pool = new Pool({
