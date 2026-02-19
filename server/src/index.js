@@ -3,9 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config({ path: '../.env' });
-
-// Import Database Connection
 const db = require('./config/db');
+const authRoutes = require('./routes/authRoutes');
+
 
 const app = express();
 
@@ -14,6 +14,9 @@ app.use(helmet()); // Security Headers
 app.use(cors()); // Allow Frontend access
 app.use(morgan('dev')); // Logging
 app.use(express.json()); // Parse JSON bodies
+
+app.use('/api/auth', authRoutes);
+
 
 // Test Route
 app.get('/', async (req, res) => {
