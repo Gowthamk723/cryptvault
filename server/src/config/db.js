@@ -11,14 +11,19 @@ const pool = new Pool({
 });
 
 // Test the connection immediately
-pool.on('connect', () => {
-  console.log('✅ Connected to PostgreSQL Database');
-});
+// Test the connection exactly ONCE at startup
+pool.query('SELECT 1')
+  .then(() => console.log('✅ Connected to PostgreSQL Database'))
+  .catch((err) => console.error('❌ PostgreSQL Connection Error:', err));
 
 pool.on('error', (err) => {
   console.error('❌ Unexpected error on idle client', err);
   process.exit(-1);
 });
+
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+};
 
 module.exports = {
   query: (text, params) => pool.query(text, params),

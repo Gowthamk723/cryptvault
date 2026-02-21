@@ -4,10 +4,14 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config({ path: '../.env' });
 const db = require('./config/db');
+const { initializeMinio } = require('./config/minio');
+const fileRoutes = require('./routes/fileRoutes');
 const authRoutes = require('./routes/authRoutes');
 
 
 const app = express();
+
+initializeMinio();
 
 // Middleware
 app.use(helmet()); // Security Headers
@@ -16,6 +20,7 @@ app.use(morgan('dev')); // Logging
 app.use(express.json()); // Parse JSON bodies
 
 app.use('/api/auth', authRoutes);
+app.use('/api/files', fileRoutes);
 
 
 // Test Route
