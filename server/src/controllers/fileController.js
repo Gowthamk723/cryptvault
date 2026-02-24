@@ -61,3 +61,55 @@ exports.uploadFile = async (req, res) => {
     res.status(500).json({ error: 'Failed to vault file' });
   }
 };
+
+// DOWNLOAD FILE
+exports.downloadFile = async (req, res) => {
+  const fileId = req.params.id;
+  const userId = req.user.userId; // From authMiddleware
+
+  try {
+    // 1. Check if the file exists and belongs to the user
+    const query = 'SELECT * FROM files WHERE id = $1 AND user_id = $2';
+    const result = await pool.query(query, [fileId, userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'File not found or access denied' });
+    }
+
+    const file = result.rows[0];
+
+    // 2. Get the file stream from MinIO
+    // We use the 'storage_key' (UUID) to find it in the bucket
+    const dataStream = await minioClient.getObject(process.env.MINIO_BUCKET, file.storage_key);
+
+    // 3. Set the Headers
+    // The frontend needs these custom headers to decrypt the file later!
+    res.setHeader('Content-Type', file.mime_type);
+    res.setHeader('x-file-name', file.file_name_encrypted);
+    res.setHeader('x-encryption-iv', file.encryption_iv);
+    res.setHeader('x-file-key', file.file_key_encrypted);
+
+    // 4. Pipe the stream directly to the response
+    dataStream.pipe(res);
+
+  } catch (err) {
+    console.error('Download Error:', err);
+    res.status(500).json({ error: 'Failed to retrieve file' });
+  }
+};
+
+// LIST ALL FILES
+exports.listFiles = async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    // We only select metadata, not the secrets
+    const query = 'SELECT id, file_name_encrypted, file_size, mime_type, created_at FROM files WHERE user_id = $1 ORDER BY created_at DESC';
+    const result = await pool.query(query, [userId]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

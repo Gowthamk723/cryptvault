@@ -12,4 +12,11 @@ router.post(
   fileController.uploadFile
 );
 
+// GET /api/files/list
+router.get('/list', authMiddleware, fileController.listFiles);
+
+// GET /api/files/:id
+router.get('/:id', authMiddleware, fileController.downloadFile);
+
+
 module.exports = router;
