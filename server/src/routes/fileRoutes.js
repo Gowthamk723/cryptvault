@@ -18,5 +18,7 @@ router.get('/list', authMiddleware, fileController.listFiles);
 // GET /api/files/:id
 router.get('/:id', authMiddleware, fileController.downloadFile);
 
+// DELETE /api/files/:id
+router.delete('/:id', authMiddleware, fileController.deleteFile);
 
 module.exports = router;

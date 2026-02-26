@@ -41,20 +41,12 @@ exports.uploadFile = async (req, res) => {
     // 3. Save the file metadata to PostgreSQL
     const newFile = await pool.query(
       `INSERT INTO files 
-      (user_id, file_name_encrypted, file_size, mime_type, storage_key, encryption_iv, file_key_encrypted) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-      [userId, fileNameEncrypted, file.size, mimeType, storageKey, encryptionIv, fileKeyEncrypted]
+      (user_id, file_name_encrypted, file_size, mime_type, storage_key, encryption_iv, file_key_encrypted, blind_index) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+      [userId, fileNameEncrypted, file.size, mimeType, storageKey, encryptionIv, fileKeyEncrypted, blindIndexHash]
     );
 
-    const fileId = newFile.rows[0].id;
-
-    // 4. Save the blind index hash so the user can search for this file later
-    await pool.query(
-      `INSERT INTO blind_indexes (user_id, file_id, blind_index_hash) VALUES ($1, $2, $3)`,
-      [userId, fileId, blindIndexHash]
-    );
-
-    res.status(201).json({ message: 'File securely vaulted!', fileId });
+    res.status(201).json({ message: 'File securely vaulted!', fileId: newFile.rows[0].id });
 
   } catch (error) {
     console.error('Upload Error:', error);
@@ -111,5 +103,35 @@ exports.listFiles = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// DELETE FILE
+exports.deleteFile = async (req, res) => {
+  const fileId = req.params.id;
+  const userId = req.user.userId;
+
+  try {
+    // 1. Find the file first (we need the storage_key to delete from MinIO)
+    const query = 'SELECT * FROM files WHERE id = $1 AND user_id = $2';
+    const result = await pool.query(query, [fileId, userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    const file = result.rows[0];
+
+    // 2. Delete from MinIO
+    await minioClient.removeObject(process.env.MINIO_BUCKET, file.storage_key);
+
+    // 3. Delete from Database
+    await pool.query('DELETE FROM files WHERE id = $1', [fileId]);
+
+    res.json({ message: 'File permanently deleted' });
+
+  } catch (err) {
+    console.error('Delete Error:', err);
+    res.status(500).json({ error: 'Failed to delete file' });
   }
 };

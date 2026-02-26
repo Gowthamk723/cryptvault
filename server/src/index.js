@@ -15,7 +15,11 @@ initializeMinio();
 
 // Middleware
 app.use(helmet()); // Security Headers
-app.use(cors()); // Allow Frontend access
+app.use(cors({
+  origin: 'http://localhost:5173', // Allow your frontend
+  credentials: true, // Allow cookies/tokens
+  exposedHeaders: ['x-file-name', 'x-encryption-iv', 'x-file-key'] // <--- THIS IS THE FIX
+})); // Allow Frontend access
 app.use(morgan('dev')); // Logging
 app.use(express.json()); // Parse JSON bodies
 
