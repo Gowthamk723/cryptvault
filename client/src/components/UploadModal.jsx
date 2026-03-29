@@ -5,7 +5,7 @@ import { encryptText, generateBlindIndex } from '../utils/crypto';
 import api from '../api/axios';
 
 const UploadModal = ({ onClose, onUploadSuccess }) => {
-  // FIXED 1: Removed 'user' since it wasn't being used
+
   const { masterKey } = useContext(AuthContext);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -15,20 +15,16 @@ const UploadModal = ({ onClose, onUploadSuccess }) => {
 
     setUploading(true);
     try {
-      // 1. GENERATE FILE KEYS (Client-Side)
       const fileKey = Math.random().toString(36).substring(2);
       const encryptionIv = Math.random().toString(36).substring(2); 
 
-      // 2. ENCRYPT METADATA
       const encryptedName = encryptText(file.name, masterKey);
       const encryptedFileKey = encryptText(fileKey, masterKey);
 
-      // --- NEW: Generate Search Index ---
       const simpleName = file.name.split('.')[0]; 
       const blindIndex = generateBlindIndex(simpleName, masterKey);
-      // ----------------------------------
 
-      // 3. PREPARE FORM DATA
+
       const formData = new FormData();
       formData.append('encryptedFile', file);
       formData.append('fileNameEncrypted', encryptedName);
@@ -36,16 +32,15 @@ const UploadModal = ({ onClose, onUploadSuccess }) => {
       formData.append('encryptionIv', encryptionIv);
       formData.append('fileKeyEncrypted', encryptedFileKey);
       
-      // FIXED 2: Used the 'blindIndex' variable instead of the placeholder string
+      
       formData.append('blindIndexHash', blindIndex); 
 
-      // 4. SEND TO SERVER
       await api.post('/files/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      onUploadSuccess(); // Refresh the dashboard
-      onClose(); // Close modal
+      onUploadSuccess(); 
+      onClose(); 
 
     } catch (err) {
       console.error("Upload failed:", err);

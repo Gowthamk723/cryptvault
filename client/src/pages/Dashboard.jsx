@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 import UploadModal from '../components/UploadModal';
-import { decryptText } from '../utils/crypto'; // <--- REMOVED generateBlindIndex
+import { decryptText } from '../utils/crypto'; 
 import { LogOut, FileText, Upload, Download, RefreshCw, Search, Trash2, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,7 +10,6 @@ const Dashboard = () => {
   const { user, logout, masterKey } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 1. Security Check
   useEffect(() => {
     if (!user || !masterKey) {
       navigate('/login');
@@ -24,7 +23,6 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [successMsg, setSuccessMsg] = useState(''); // State for Toast
 
-  // 2. Fetch files
   const fetchFiles = async () => {
     try {
       setLoading(true);
@@ -43,7 +41,6 @@ const Dashboard = () => {
     fetchFiles();
   }, []);
 
-  // Helper: Format file size
   const formatSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -52,24 +49,20 @@ const Dashboard = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Helper: Show Toast
   const showToast = (message) => {
     setSuccessMsg(message);
     setTimeout(() => setSuccessMsg(''), 3000);
   };
 
-  // Upload Success Handler
   const handleUploadSuccess = () => {
     fetchFiles();
     showToast('File uploaded successfully! 🚀');
   };
 
-  // Storage Calculation
   const totalUsage = files.reduce((acc, file) => acc + parseInt(file.file_size), 0);
-  const MAX_LIMIT = 500 * 1024 * 1024; // 500 MB Limit
+  const MAX_LIMIT = 500 * 1024 * 1024; 
   const usagePercent = Math.min((totalUsage / MAX_LIMIT) * 100, 100);
 
-  // 3. Download Logic
   const handleDownload = async (fileId) => {
     try {
       const res = await api.get(`/files/${fileId}`, {
@@ -99,7 +92,6 @@ const Dashboard = () => {
     }
   };
 
-  // 4. Delete Logic (Updated with Toast)
   const handleDelete = async (fileId) => {
     if (!confirm("Are you sure you want to delete this file? This cannot be undone.")) {
       return;
@@ -107,9 +99,9 @@ const Dashboard = () => {
 
     try {
       await api.delete(`/files/${fileId}`);
-      // Optimistic update
+
       setFiles(files.filter(f => f.id !== fileId));
-      // Show Success Message
+
       showToast('File deleted successfully! 🗑️');
     } catch (err) {
       console.error(err);
@@ -138,10 +130,8 @@ const Dashboard = () => {
         </button>
       </header>
 
-      {/* MAIN CONTENT */}
       <main className="max-w-6xl mx-auto">
         
-        {/* STORAGE QUOTA WIDGET */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg md:col-span-1">
             <h3 className="text-slate-400 text-sm font-medium mb-2 uppercase tracking-wider">Storage Usage</h3>
@@ -149,7 +139,6 @@ const Dashboard = () => {
               <span className="text-2xl font-bold text-white">{formatSize(totalUsage)}</span>
               <span className="text-slate-500 text-sm mb-1">/ 500 MB</span>
             </div>
-            {/* Progress Bar */}
             <div className="w-full bg-slate-700 rounded-full h-2.5 overflow-hidden">
               <div 
                 className={`h-2.5 rounded-full transition-all duration-500 ${
@@ -167,14 +156,13 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ACTIONS BAR */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <FileText className="text-blue-400" /> Your Secure Files
           </h2>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            {/* SEARCH BAR */}
+            
             <div className="relative flex-1 md:w-64">
               <input
                 type="text"
@@ -186,7 +174,6 @@ const Dashboard = () => {
               <Search className="absolute left-3 top-2.5 text-slate-500 h-5 w-5" />
             </div>
 
-            {/* REFRESH BUTTON */}
             <button 
               onClick={fetchFiles}
               className="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-slate-300 transition-colors"
@@ -195,7 +182,6 @@ const Dashboard = () => {
               <RefreshCw size={20} />
             </button>
             
-            {/* UPLOAD BUTTON */}
             <button 
               onClick={() => setShowUpload(true)}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2.5 rounded-lg font-medium text-sm transition-transform transform hover:scale-105 whitespace-nowrap"
@@ -205,20 +191,17 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ERROR STATE */}
         {error && (
           <div className="bg-red-500/10 border border-red-500 text-red-400 p-4 rounded-xl mb-6 text-sm">
             {error}
           </div>
         )}
 
-        {/* LOADING STATE */}
         {loading ? (
           <div className="text-center py-20 text-slate-500 animate-pulse">
             Loading your encrypted vault...
           </div>
         ) : (
-          /* FILES TABLE */
           <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-2xl">
             {files.length === 0 ? (
               <div className="p-10 text-center text-slate-400">
@@ -282,7 +265,6 @@ const Dashboard = () => {
         )}
       </main>
 
-      {/* RENDER MODAL IF OPEN */}
       {showUpload && (
         <UploadModal 
           onClose={() => setShowUpload(false)} 
@@ -290,7 +272,7 @@ const Dashboard = () => {
         />
       )}
 
-      {/* SUCCESS TOAST NOTIFICATION */}
+      
       {successMsg && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-2 animate-bounce z-50">
           <div className="bg-white/20 p-1 rounded-full">

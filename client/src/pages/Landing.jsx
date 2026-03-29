@@ -4,7 +4,7 @@ import { Shield, Lock, Database, ArrowRight } from 'lucide-react';
 const Landing = () => {
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
-      {/* Navbar */}
+     
       <nav className="max-w-7xl mx-auto w-full p-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
           CryptVault
@@ -17,7 +17,6 @@ const Landing = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <main className="flex-1 flex flex-col items-center justify-center text-center px-6">
         <div className="bg-blue-500/10 p-4 rounded-full mb-8 animate-pulse">
           <Shield className="h-16 w-16 text-blue-400" />
@@ -42,7 +41,6 @@ const Landing = () => {
           </Link>
         </div>
 
-        {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-8 mt-24 max-w-6xl w-full text-left">
           <div className="bg-slate-800/50 p-8 rounded-2xl border border-slate-700 backdrop-blur-sm">
             <Lock className="h-10 w-10 text-purple-400 mb-4" />
@@ -62,7 +60,6 @@ const Landing = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="py-8 text-center text-slate-500 text-sm">
         © 2026 CryptVault. Secure by Design.
       </footer>

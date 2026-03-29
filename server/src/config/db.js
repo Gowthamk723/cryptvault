@@ -1,7 +1,6 @@
 const { Pool } = require('pg');
 require('dotenv').config({ path: '../.env' });
 
-// Create a connection pool (better performance than single client)
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -10,8 +9,6 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-// Test the connection immediately
-// Test the connection exactly ONCE at startup
 pool.query('SELECT 1')
   .then(() => console.log('✅ Connected to PostgreSQL Database'))
   .catch((err) => console.error('❌ PostgreSQL Connection Error:', err));

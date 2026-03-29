@@ -8,12 +8,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Private Route */}
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>

@@ -6,27 +6,55 @@ services:
     container_name: cryptvault_db
     restart: always
     environment:
-      POSTGRES_USER: ${DB_USER}       
-      POSTGRES_PASSWORD: ${DB_PASS}   
-      POSTGRES_DB: ${DB_NAME}         
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: cryptvault
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   minio:
     image: minio/minio
     container_name: cryptvault_minio
     restart: always
-    command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_USER}  
-      MINIO_ROOT_PASSWORD: ${MINIO_PASS} 
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:9000" 
+      - "9001:9001" 
     volumes:
       - minio_data:/data
+
+  server:
+    build: ./server 
+    container_name: cryptvault_server
+    restart: always
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      
+      - DB_HOST=db
+      - MINIO_ENDPOINT=minio
+    depends_on:
+      - db
+      - minio
+
+  client:
+    build: ./client 
+    container_name: cryptvault_client
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000/api 
+    depends_on:
+      - server
 
 volumes:
   postgres_data:

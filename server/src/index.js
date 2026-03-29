@@ -13,21 +13,19 @@ const app = express();
 
 initializeMinio();
 
-// Middleware
-app.use(helmet()); // Security Headers
+app.use(helmet()); 
 app.use(cors({
-  origin: 'http://localhost:5173', // Allow your frontend
-  credentials: true, // Allow cookies/tokens
-  exposedHeaders: ['x-file-name', 'x-encryption-iv', 'x-file-key'] // <--- THIS IS THE FIX
-})); // Allow Frontend access
-app.use(morgan('dev')); // Logging
-app.use(express.json()); // Parse JSON bodies
+  origin: 'http://localhost:5173', 
+  credentials: true, 
+  exposedHeaders: ['x-file-name', 'x-encryption-iv', 'x-file-key'] 
+})); 
+app.use(morgan('dev')); 
+app.use(express.json()); 
 
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 
 
-// Test Route
 app.get('/', async (req, res) => {
   try {
     const result = await db.query('SELECT NOW()');

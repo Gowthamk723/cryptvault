@@ -3,17 +3,14 @@ const pool = require('../config/db');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 
-// Configure Multer to hold the uploaded file in memory temporarily
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Middleware to catch a single file named 'encryptedFile'
 exports.uploadMiddleware = upload.single('encryptedFile');
 
 exports.uploadFile = async (req, res) => {
-  const userId = req.user.userId; // Comes from our authMiddleware!
-  const file = req.file; // The actual file blob
+  const userId = req.user.userId; 
+  const file = req.file; 
 
-  // All this metadata comes from the frontend
   const { 
     fileNameEncrypted, 
     mimeType, 
@@ -27,10 +24,9 @@ exports.uploadFile = async (req, res) => {
   }
 
   try {
-    // 1. Create a random unique ID for MinIO storage
+
     const storageKey = uuidv4();
 
-    // 2. Send the file blob to MinIO bucket
     await minioClient.putObject(
       process.env.MINIO_BUCKET,
       storageKey,
@@ -38,7 +34,6 @@ exports.uploadFile = async (req, res) => {
       file.size
     );
 
-    // 3. Save the file metadata to PostgreSQL
     const newFile = await pool.query(
       `INSERT INTO files 
       (user_id, file_name_encrypted, file_size, mime_type, storage_key, encryption_iv, file_key_encrypted, blind_index) 
@@ -54,13 +49,11 @@ exports.uploadFile = async (req, res) => {
   }
 };
 
-// DOWNLOAD FILE
 exports.downloadFile = async (req, res) => {
   const fileId = req.params.id;
-  const userId = req.user.userId; // From authMiddleware
+  const userId = req.user.userId; 
 
   try {
-    // 1. Check if the file exists and belongs to the user
     const query = 'SELECT * FROM files WHERE id = $1 AND user_id = $2';
     const result = await pool.query(query, [fileId, userId]);
 
@@ -70,18 +63,14 @@ exports.downloadFile = async (req, res) => {
 
     const file = result.rows[0];
 
-    // 2. Get the file stream from MinIO
-    // We use the 'storage_key' (UUID) to find it in the bucket
     const dataStream = await minioClient.getObject(process.env.MINIO_BUCKET, file.storage_key);
 
-    // 3. Set the Headers
-    // The frontend needs these custom headers to decrypt the file later!
+
     res.setHeader('Content-Type', file.mime_type);
     res.setHeader('x-file-name', file.file_name_encrypted);
     res.setHeader('x-encryption-iv', file.encryption_iv);
     res.setHeader('x-file-key', file.file_key_encrypted);
 
-    // 4. Pipe the stream directly to the response
     dataStream.pipe(res);
 
   } catch (err) {
@@ -90,12 +79,11 @@ exports.downloadFile = async (req, res) => {
   }
 };
 
-// LIST ALL FILES
 exports.listFiles = async (req, res) => {
   const userId = req.user.userId;
 
   try {
-    // We only select metadata, not the secrets
+ 
     const query = 'SELECT id, file_name_encrypted, file_size, mime_type, created_at FROM files WHERE user_id = $1 ORDER BY created_at DESC';
     const result = await pool.query(query, [userId]);
 
@@ -106,13 +94,13 @@ exports.listFiles = async (req, res) => {
   }
 };
 
-// DELETE FILE
+
 exports.deleteFile = async (req, res) => {
   const fileId = req.params.id;
   const userId = req.user.userId;
 
   try {
-    // 1. Find the file first (we need the storage_key to delete from MinIO)
+
     const query = 'SELECT * FROM files WHERE id = $1 AND user_id = $2';
     const result = await pool.query(query, [fileId, userId]);
 
@@ -122,10 +110,8 @@ exports.deleteFile = async (req, res) => {
 
     const file = result.rows[0];
 
-    // 2. Delete from MinIO
     await minioClient.removeObject(process.env.MINIO_BUCKET, file.storage_key);
 
-    // 3. Delete from Database
     await pool.query('DELETE FROM files WHERE id = $1', [fileId]);
 
     res.json({ message: 'File permanently deleted' });
